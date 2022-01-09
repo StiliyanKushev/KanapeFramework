@@ -30,7 +30,7 @@ export const cmdError = (err:string) => console.log(err.bg_white.red)
  * @param {string} msg The warning message to throw. */
 export const cmdWarn = (msg:string) => console.log(`NOTE: ${msg}`.bg_black.yellow)
 /** Print help message to the console. */
-export const cmdHelp = (module:Module): void => console.log(`\n[${module.description}]\n\n${module.help}\n`) 
+export const cmdHelp = (module:Module): void => console.log(`\n${module.description}\n\n${module.help}\n`) 
 
 /**
  * Print a log message to the console.

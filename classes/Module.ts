@@ -1,5 +1,5 @@
 import { cmdClear, cmdHelp } from './../utils/cmd';
-import { cmdError, cmdWarn } from '../utils/cmd';
+import { cmdError, cmdWarn, cmdExit } from '../utils/cmd';
 const prompt = require("prompt-sync")({ sigint: true });
 
 export class Module implements Module {
@@ -7,7 +7,8 @@ export class Module implements Module {
     public description = '[!] Module does not have a description.'.bg_white.red;
     public args: {
         arg: string,
-        handler: (value?) => void
+        handler: (value?) => void,
+        desc?: string,
     }[] = [];
 
     constructor(public name: string) { }
@@ -44,7 +45,10 @@ export class Module implements Module {
         {
             arg: 'help',
             desc: 'Prints the help message of the current module',
-            handler: () => cmdHelp(Module.currentModule) 
+            handler: () => {
+                Module.currentModule.help = Module.makeHelp(Module.currentModule.args);
+                cmdHelp(Module.currentModule);
+            } 
         },
         {
             arg: 'clear',
@@ -69,11 +73,19 @@ export class Module implements Module {
 
     static makeHelp(args:{
         arg: string,
-        desc: string
-    }[]):string{
-        let helpMsg = ``;
-        args = [...Module.defaultArgs, { arg:'', desc:'' } ,...args]
-        args.map(arg => helpMsg += arg.arg.length > 0 ? `${arg.arg} "${arg.desc}"\n` : '-------------------------------------------------------\n');
+        desc?: string
+    }[]):string {
+        let longLine = '-------------------------------------------------------\n';
+        args = [...Module.defaultArgs, { arg:'', desc:'' } ,...args];
+        let helpMsg = longLine + '# Global\n' + longLine;
+        args.map(arg => helpMsg += arg.arg.length > 0 ? `${arg.arg} ${arg.desc ? '"' + arg.desc + '"' :
+                              "[!] Argument does not have a description.".bg_white.red}\n` : longLine + '# Module\n' + longLine);
+        
+        if(args.length === Module.defaultArgs.length + 1){
+            // module has no args
+            helpMsg += 'Module is empty and has no arguments.\n'
+        }
+        helpMsg += longLine;
         helpMsg = helpMsg.slice(0, -1);
         return helpMsg;
     }
