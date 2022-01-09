@@ -20,7 +20,7 @@ export const logoMsg =
 /** Clear the console. */
 export const cmdClear = (): void => { process.stdout.write("\u001b[3J\u001b[2J\u001b[1J"); console.clear(); cmdLogo() }
 /** Print logo message to the console. */
-export const cmdLogo = (): void => { console.log(logoMsg); }
+export const cmdLogo = (): void => console.log(logoMsg)
 /** Terminate the current process. */
 export const cmdExit = (): void => process.exit(1);
 /** Print an error message to the console and exit.
@@ -28,9 +28,9 @@ export const cmdExit = (): void => process.exit(1);
 export const cmdError = (err:string) => console.log(err.bg_white.red)
 /** Print a warning message to the console.
  * @param {string} msg The warning message to throw. */
-export const cmdWarn = (msg:string) => console.log(`NOTE: ${msg}`.bg_black.yellow);
+export const cmdWarn = (msg:string) => console.log(`NOTE: ${msg}`.bg_black.yellow)
 /** Print help message to the console. */
-export const cmdHelp = (module:Module): void =>console.log(module.help) 
+export const cmdHelp = (module:Module): void => console.log(`\n[${module.description}]\n\n${module.help}\n`) 
 
 /**
  * Print a log message to the console.

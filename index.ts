@@ -2,14 +2,14 @@ import generateModules from './utils/modules';
 import { cmdClear } from './utils/cmd';
 import { Module } from './classes/Module';
 
+// clear the console before execution.
+cmdClear();
+
 (async () => {
-    const modules = await generateModules();
-    let currentModule = modules.find(m => m.name === 'default');
-
-    cmdClear();
-
+    Module.allModules = await generateModules();
+    Module.switchTo('default');
     while(true){
-        const input: string = await Module.prompt(`[kf/${currentModule.name}]$ `) as string;
-        currentModule.exec(input);
+        const input: string = await Module.prompt(`[kf/${Module.currentModule.name}]$ `) as string;
+        Module.currentModule.exec(input);
     }
 })();
