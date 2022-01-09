@@ -13,7 +13,7 @@
     "typescript": "^4.5.4"
   },
   "dependencies": {
-    "@types/colors": "^1.2.1",
-    "colors": "^1.4.44-liberty-2"
+    "colors.ts": "^1.0.20",
+    "prompt-sync": "^4.2.0"
   }
 }

@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "noImplicitAny": false,
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "outDir": "./build",
+    },
+    "include": [
+        "lib/**/*",
+        "sample/**/*",
+    ],
+    //"exclude": [],
+    //"files": [],
+}
