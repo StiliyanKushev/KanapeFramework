@@ -1,6 +1,12 @@
-import { cmdClear, cmdHelp } from './../utils/cmd';
-import { cmdError, cmdWarn, cmdExit } from '../utils/cmd';
-const prompt = require("prompt-sync")({ sigint: true });
+import {
+    cmdClear,
+    cmdError,
+    cmdExit,
+    cmdHelp,
+    cmdWarn,
+} from '../utils/cmd';
+
+const prompt = require("prompt-sync")({ sigint: false });
 
 export class Module implements Module {
     public help = '[!] Module does not have a help message.'.bg_white.red;
@@ -14,6 +20,9 @@ export class Module implements Module {
     constructor(public name: string) { }
 
     public async exec(input:string) {
+        // Ctr-C was pressed
+        if(input === null) { cmdExit(); return }
+
         const internal = Module.defaultArgs.find(m => input.startsWith(m.arg));
         const argument = this.args.find(a => input.startsWith(a.arg));
         const final = internal || argument;
@@ -64,7 +73,7 @@ export class Module implements Module {
             arg: 'cd=',
             desc: 'Switch to a different module. Example: cd=default',
             handler: module => Module.switchTo(module)
-        }
+        },
     ]
 
     static currentModule: Module;

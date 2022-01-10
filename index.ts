@@ -1,6 +1,6 @@
-import generateModules from './utils/modules';
-import { cmdClear } from './utils/cmd';
 import { Module } from './classes/Module';
+import { cmdClear } from './utils/cmd';
+import generateModules from './utils/modules';
 
 // clear the console before execution.
 cmdClear();
@@ -10,6 +10,6 @@ cmdClear();
     Module.switchTo('default');
     while(true){
         const input: string = await Module.prompt(`[kf/${Module.currentModule.name}]$ `) as string;
-        Module.currentModule.exec(input);
+        await Module.currentModule.exec(input);
     }
 })();

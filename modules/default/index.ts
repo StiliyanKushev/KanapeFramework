@@ -2,7 +2,9 @@ import { Module } from "../../classes/Module";
 
 export default class DefaultModule extends Module {
     public variable: string;
-    public description = 'This module is designed to act as a showcase for the module syntax. Check the source for more info.';
+    public description = 
+    'This module is designed to act as a showcase for the module syntax. ' + 
+    'Check the source for more info.';
 
     public args = [
         {

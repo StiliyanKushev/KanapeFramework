@@ -1,5 +1,7 @@
 import 'colors.ts';
+
 import fs from 'fs';
+
 import { Module } from '../classes/Module';
 
 // CMD ARGUMENT RELATED STUFF
@@ -22,7 +24,7 @@ export const cmdClear = (): void => { process.stdout.write("\u001b[3J\u001b[2J\u
 /** Print logo message to the console. */
 export const cmdLogo = (): void => console.log(logoMsg)
 /** Terminate the current process. */
-export const cmdExit = (): void => process.exit(1);
+export const cmdExit = (): void => process.exit();
 /** Print an error message to the console and exit.
  * @param {string} err The error message to throw. */
 export const cmdError = (err:string) => console.log(err.bg_white.red)
