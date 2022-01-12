@@ -110,10 +110,8 @@ export class Module implements Module {
             if(found) Module.currentModule = found;
             else cmdWarn(`No module was found with the name "${module}"`);
         }
-        else {
-            Module.currentModule = module;
-        }
-
+        else Module.currentModule = module;
+        
         cmdClear();
     }
 }
