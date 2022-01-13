@@ -8,12 +8,12 @@ FILETYPE 0x2
 	{
 		BLOCK "040904b0"
 		{
-			VALUE "FileDescription", "SlimeRancher Launcher"
-			VALUE "OriginalFilename", "SlimeRancher.exe"
-			VALUE "CompanyName", "SlimeRancher.exe"
+			VALUE "FileDescription", "Payload."
+			VALUE "OriginalFilename", "payload.exe"
+			VALUE "CompanyName", "payload.exe"
 			VALUE "FileVersion", "1,0,0,0"
-			VALUE "LegalCopyright", "Copyright © SlimeRancher.exe"
-			VALUE "ProductName", "SlimeRancher.exe"
+			VALUE "LegalCopyright", "Copyright © payload.exe"
+			VALUE "ProductName", "payload.exe"
 			VALUE "ProductVersion", "1,0,0,0"
 		}
 	}

