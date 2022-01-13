@@ -26,7 +26,6 @@
     "pkg": "^4.5.1",
     "prompt-sync": "^4.2.0",
     "resedit": "^1.5.0",
-    "windows-shortcuts": "^0.1.6",
     "yarn": "^1.22.17"
   }
 }
