@@ -1,6 +1,15 @@
 import { Module } from './classes/Module';
-import { cmdClear } from './utils/cmd';
+import {
+    cmdClear,
+    cmdError,
+    cmdExit,
+} from './utils/cmd';
 import generateModules from './utils/modules';
+
+if (process.version != 'v14.18.2'){
+    cmdError('NodeJS version v14.18.2 is required. Current version is ' + process.version);
+    cmdExit();
+}
 
 // clear the console before execution.
 cmdClear();

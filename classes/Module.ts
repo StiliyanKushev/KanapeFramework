@@ -17,7 +17,7 @@ export class Module implements Module {
         desc?: string,
     }[] = [];
 
-    constructor(public name: string) { }
+    constructor(public name: string, public _constr,public _index:number) { }
 
     public async exec(input:string) {
         // Ctr-C was pressed
@@ -70,6 +70,11 @@ export class Module implements Module {
             handler: () => Module.allModules.map(m => console.log(`[${m.name}] - ${m.description}`))
         },
         {
+            arg: 'reset',
+            desc: `Resets the current module's values.`,
+            handler: () => Module._reset() 
+        },
+        {
             arg: 'cd=',
             desc: 'Switch to a different module. Example: cd=default',
             handler: module => Module.switchTo(module)
@@ -77,8 +82,19 @@ export class Module implements Module {
     ]
 
     static currentModule: Module;
-
     static allModules: Module[] = [];
+
+    static _reset(){
+        const reseted = new Module.currentModule
+        ._constr.default(
+            Module.currentModule.name,
+            Module.currentModule._constr,
+            Module.currentModule._index,
+        );
+
+        Module.currentModule = reseted;
+        Module.allModules[Module.currentModule._index] = reseted;
+    }
 
     static makeHelp(args:{
         arg: string,
@@ -107,10 +123,16 @@ export class Module implements Module {
 
         if(typeof module === 'string'){
             const found = Module.allModules.find(m => m.name === module);
-            if(found) Module.currentModule = found;
+            if(found) {
+                if(Module.currentModule) Module._reset();
+                Module.currentModule = found
+            }
             else cmdWarn(`No module was found with the name "${module}"`);
         }
-        else Module.currentModule = module;
+        else {
+            if(Module.currentModule) Module._reset();
+            Module.currentModule = module;
+        }
         
         cmdClear();
     }
