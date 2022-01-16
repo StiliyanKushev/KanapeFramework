@@ -16,9 +16,13 @@ cmdClear();
 
 (async () => {
     Module.allModules = await generateModules();
-    Module.switchTo('default');
-    while(true){
-        const input: string = await Module.prompt(`[kf/${Module.currentModule.name}]$ `) as string;
-        await Module.currentModule.exec(input);
+    //Module.switchTo('default');
+    Module.switchTo('shell_server');
+    async function main(){
+        await Module.prompt(`[kf/${Module.currentModule.name}]$ `, async input => {
+            await Module.currentModule.__exec(input);
+            setTimeout(main);
+        })
     }
+    await main();
 })();

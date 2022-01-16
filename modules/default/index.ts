@@ -1,10 +1,19 @@
-import { Module } from "../../classes/Module";
+import { Module } from '../../classes/Module';
 
 export default class DefaultModule extends Module {
     public variable: string;
     public description = 
     'This module is designed to act as a showcase for the module syntax. ' + 
     'Check the source for more info.';
+
+    // lifecycle hooks
+    public onStartup(){
+        this.variable = 'startup';
+    }
+    public onClose(callback){
+        this.variable = 'default';
+        callback();
+    }
 
     public args = [
         {

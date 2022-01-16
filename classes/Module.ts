@@ -1,3 +1,5 @@
+import readline from 'readline';
+
 import {
     cmdClear,
     cmdError,
@@ -6,7 +8,10 @@ import {
     cmdWarn,
 } from '../utils/cmd';
 
-const prompt = require("prompt-sync")({ sigint: false });
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
 export class Module implements Module {
     public help = '[!] Module does not have a help message.'.bg_white.red;
@@ -19,12 +24,20 @@ export class Module implements Module {
 
     constructor(public name: string, public _constr,public _index:number) { }
 
-    public async exec(input:string) {
+    // lifecycle hooks
+    public onStartup() { }
+    public onClose(callback: () => void) { callback() }
+    // end of lifecycle hooks
+
+    public async __exec(input:string) {
         // Ctr-C was pressed
         if(input === null) { cmdExit(); return }
 
-        const internal = Module.defaultArgs.find(m => input.startsWith(m.arg));
-        const argument = this.args.find(a => input.startsWith(a.arg));
+        // if enter was pressed
+        if(input.trim().length === 0) return;
+
+        const internal = Module.defaultArgs.find(m => input === m.arg || input.split('=')[0] + '=' === m.arg);
+        const argument = this.args.find(a => input == a.arg || input.split('=')[0] + '=' === a.arg);
         const final = internal || argument;
         if(final){
             if(final.arg.endsWith('=')){
@@ -42,8 +55,8 @@ export class Module implements Module {
         else cmdError(`"${input}" is not a valid command for module "${this.name}"`);
     }
 
-    static prompt(query: string) {
-        return prompt(query) as string;
+    static async prompt(query: string, callback: (value?:string) => void) {
+        rl.question(query, await callback);
     }
 
     static defaultArgs: {
@@ -92,8 +105,8 @@ export class Module implements Module {
             Module.currentModule._index,
         );
 
-        Module.currentModule = reseted;
         Module.allModules[Module.currentModule._index] = reseted;
+        Module.currentModule = reseted;
     }
 
     static makeHelp(args:{
@@ -121,19 +134,27 @@ export class Module implements Module {
             return;
         }
 
+        const _switch = (newModule:Module) => {
+            if(Module.currentModule) {
+                Module.currentModule.onClose(() => {
+                    cmdClear();
+                    Module._reset();
+                    Module.currentModule = newModule;
+                    Module.currentModule.onStartup();
+                });
+            }
+            else {
+                cmdClear();
+                Module.currentModule = newModule;
+                Module.currentModule.onStartup();
+            }
+        }
+
         if(typeof module === 'string'){
             const found = Module.allModules.find(m => m.name === module);
-            if(found) {
-                if(Module.currentModule) Module._reset();
-                Module.currentModule = found
-            }
+            if(found) _switch(found);
             else cmdWarn(`No module was found with the name "${module}"`);
         }
-        else {
-            if(Module.currentModule) Module._reset();
-            Module.currentModule = module;
-        }
-        
-        cmdClear();
+        else _switch(module);
     }
 }
