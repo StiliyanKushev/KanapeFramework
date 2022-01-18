@@ -16,8 +16,7 @@ cmdClear();
 
 (async () => {
     Module.allModules = await generateModules();
-    //Module.switchTo('default');
-    Module.switchTo('reverse_shell');
+    Module.switchTo('default');
     async function main(){
         await Module.prompt(`[kf/${Module.currentModule.name}]$ `, async input => {
             await Module.currentModule.__exec(input);
